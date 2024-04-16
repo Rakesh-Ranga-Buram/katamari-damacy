@@ -1,5 +1,4 @@
-// The <canvas /> DOM element, set after page load.
-let _canvas;
+
 
 // The last frame time, used to calculate delta time (dt).
 let _lastFrameTime;
@@ -21,24 +20,19 @@ const loop = (time) => {
   const dt = time - _lastFrameTime;
   _lastFrameTime = time;
 
-  // Resize the canvas to fill the screen.
-  if (_canvas) {
-    _canvas.width = _canvas.clientWidth
-    _canvas.height = _canvas.clientHeight;
-  }
 
   // Call the init() function once and only once.
   if (!_hasInited) {
     if (window.init) {
       _hasInited = true;
       
-      window.init(_canvas);
+      window.init();
     }
   }
 
   // Call the loop() function every frame.
   if (window.loop) {
-    window.loop(dt, _canvas, _input);
+    window.loop(dt, _input);
   }
 
   window.requestAnimationFrame(loop);
@@ -72,8 +66,6 @@ window.loadShader = async ({ gl, name, type }) => {
 // Add a listener to the global window object for the page load.
 // See: https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onload)
 window.onload = () => {
-  // get the <canvas /> DOM element
-  _canvas = document.getElementById('canvas');
 
   // add handlers
   document.addEventListener('keydown', (event) => {

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Dragon Ball
+* source:	https://sketchfab.com/3d-models/dragon-ball-1b5c3c86ea344ef591cd95edd82f6842
+* author:	Isaack - Tacko The 3D Guy (https://sketchfab.com/isaackgamma)
+
+Model License:
+* license type:	CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions must have the same license.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Dragon Ball" (https://sketchfab.com/3d-models/dragon-ball-1b5c3c86ea344ef591cd95edd82f6842) by Isaack - Tacko The 3D Guy (https://sketchfab.com/isaackgamma) licensed under CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
