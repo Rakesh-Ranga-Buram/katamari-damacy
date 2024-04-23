@@ -4,10 +4,12 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 let renderer,
   scene,
   camera,
-  ball,
+  car,
   plane,
   dragonBall,
   pokeBall,
+  table,
+  can,
   objects = [],
   level = 0;
 
@@ -29,33 +31,11 @@ const checkUpdateLevel = () => {
 
   if (levelCompleted) {
     level++;
-    if (level === 2) {
+    if (level === 4) {
       alert("GAME OVER");
     }
   }
 };
-
-// Helper function to calculate overlap between two bounding boxes
-function calculateOverlap(box1, box2) {
-  const overlap = new THREE.Box3();
-  overlap.setFromCenterAndSize(
-    new THREE.Vector3(
-      Math.max(box1.min.x, box2.min.x),
-      Math.max(box1.min.y, box2.min.y),
-      Math.max(box1.min.z, box2.min.z)
-    ),
-    new THREE.Vector3(
-      Math.min(box1.max.x, box2.max.x) - Math.max(box1.min.x, box2.min.x),
-      Math.min(box1.max.y, box2.max.y) - Math.max(box1.min.y, box2.min.y),
-      Math.min(box1.max.z, box2.max.z) - Math.max(box1.min.z, box2.min.z)
-    )
-  );
-  const overlapSize = new THREE.Vector3();
-  overlap.getSize(overlapSize);
-  return overlapSize.x > 0 && overlapSize.y > 0 && overlapSize.z > 0
-    ? overlapSize.length() / 2
-    : 0;
-}
 
 window.init = async () => {
   renderer = new THREE.WebGLRenderer();
@@ -88,14 +68,14 @@ window.init = async () => {
   plane.scale.set(100, 100, 100);
   scene.add(plane);
 
-  ball = await load("./assets/worn_baseball_ball/scene.gltf");
-  const scale = 2;
-  ball.scale.set(scale, scale, scale);
-  const boundingBox = new THREE.Box3().setFromObject(ball);
-  const ballSize = new THREE.Vector3();
-  boundingBox.getSize(ballSize);
-  ball.position.y = ballSize.y / 2;
-  scene.add(ball);
+  car = await load("./assets/mclaren_senna_free/scene.gltf");
+  const scale = 1;
+  car.scale.set(scale, scale, scale);
+  const boundingBox = new THREE.Box3().setFromObject(car);
+  const carSize = new THREE.Vector3();
+  boundingBox.getSize(carSize);
+  car.position.y = carSize.y / 2;
+  scene.add(car);
 
   dragonBall = await load("./assets/dragon_ball/scene.gltf");
   const numDragonBalls = 2;
@@ -111,7 +91,7 @@ window.init = async () => {
       Math.random() * 50 - 5
     );
 
-    const dragon_boundingBox = new THREE.Box3().setFromObject(ball);
+    const dragon_boundingBox = new THREE.Box3().setFromObject(car);
     const dragon_ballSize = new THREE.Vector3();
     dragon_boundingBox.getSize(dragon_ballSize);
     dragonBallClone.position.y = dragon_ballSize.y / 2;
@@ -137,15 +117,40 @@ window.init = async () => {
     scene.add(pokeBallClone);
     objects.push(pokeBallClone);
   }
+
+  table = await load("./assets/printable_treasure_chest/scene.gltf");
+  const tables = 2;
+  for (let i = 0; i < tables; i++) {
+    const tableClone = table.clone();
+    tableClone.level = 2;
+
+    tableClone.scale.set(0.5, 0.5, 0.5);
+
+    tableClone.position.set(Math.random() * 50 - 4, 0, Math.random() * 50 - 4);
+    scene.add(tableClone);
+    objects.push(tableClone);
+  }
+
+  can = await load("./assets/french_coke_can/scene.gltf");
+  const cans = 2;
+  for (let i = 0; i < cans; i++) {
+    const canClone = can.clone();
+    canClone.level = 3;
+
+    canClone.scale.set(0.2, 0.3, 0.4);
+
+    canClone.position.set(Math.random() * 50 - 4, 0, Math.random() * 50 - 4);
+    scene.add(canClone);
+    objects.push(canClone);
+  }
 };
 
-let speed = [0, 0, 0];
 let acc = 0.0001;
 let drag = 0.98;
 let turnSpeed = 0.01;
 let velocity = 0;
 window.loop = (dt, input) => {
-  if (ball) {
+  if (car) {
     // acceleration/deceleration
     if (input.keys.has("ArrowUp")) {
       velocity = Math.min(1, velocity + dt * acc);
@@ -157,69 +162,113 @@ window.loop = (dt, input) => {
 
     // turn
     if (input.keys.has("ArrowLeft")) {
-      ball.rotateY(turnSpeed * dt * velocity);
+      car.rotateY(turnSpeed * dt * velocity);
     } else if (input.keys.has("ArrowRight")) {
-      ball.rotateY(-turnSpeed * dt * velocity);
+      car.rotateY(-turnSpeed * dt * velocity);
     }
 
     const forward = new THREE.Vector3();
-    ball.getWorldDirection(forward);
-    ball.position.add(forward.clone().multiplyScalar(velocity));
+    car.getWorldDirection(forward);
+    car.position.add(forward.clone().multiplyScalar(velocity));
 
-    // Clamp ball position to the nearest edge of the plane
+    // Clamp car position to the nearest edge of the plane
     const planeBounds = new THREE.Box3().setFromObject(plane);
-    const ballSize = new THREE.Vector3();
-    const boundingBox = new THREE.Box3().setFromObject(ball);
-    boundingBox.getSize(ballSize);
-    const ballRadius = ballSize.length() / 2;
-    const clampedPosition = new THREE.Vector3().copy(ball.position);
+    const carSize = new THREE.Vector3();
+    const boundingBox = new THREE.Box3().setFromObject(car);
+    boundingBox.getSize(carSize);
+    const carRadius = carSize.length() / 2;
+    const clampedPosition = new THREE.Vector3().copy(car.position);
     clampedPosition.x = THREE.MathUtils.clamp(
       clampedPosition.x,
-      planeBounds.min.x + ballRadius,
-      planeBounds.max.x - ballRadius
+      planeBounds.min.x + carRadius,
+      planeBounds.max.x - carRadius
     );
     clampedPosition.z = THREE.MathUtils.clamp(
       clampedPosition.z,
-      planeBounds.min.z + ballRadius,
-      planeBounds.max.z - ballRadius
+      planeBounds.min.z + carRadius,
+      planeBounds.max.z - carRadius
     );
-    ball.position.copy(clampedPosition);
+    car.position.copy(clampedPosition);
 
     // collision detection
-    const ballBox = new THREE.Box3().setFromObject(ball);
+    const carBox = new THREE.Box3().setFromObject(car);
+    const box = new THREE.Box3();
+    let isColliding = false; // Flag to track collision with objects of other levels
+
     for (let i = 0; i < objects.length; i++) {
       const obj = objects[i];
       if (obj.disabled) {
         continue;
       }
 
-      const box = new THREE.Box3().setFromObject(obj);
-      if (ballBox.intersectsBox(box)) {
+      box.setFromObject(obj);
+      if (carBox.intersectsBox(box)) {
         if (obj.level === level) {
           obj.disabled = true;
           scene.remove(obj);
-          ball.attach(obj); // Attach the collided object to the ball
 
-          // Adjust the position of the attached object
-          const overlap = calculateOverlap(ballBox, box);
-          obj.position.set(
-            obj.position.x - ball.position.x + ballRadius,
-            obj.position.y - ball.position.y + ballRadius,
-            obj.position.z - ball.position.z + ballRadius
-          );
-          obj.position.setLength(overlap);
+          // Calculate the contact point between the car and the object
+          const contactPoint = new THREE.Vector3();
+          carBox.getCenter(contactPoint); // Get the center of the car
+          box.clampPoint(contactPoint, contactPoint); // Get the closest point on the object's bounding box to the car
 
+          // Calculate the offset from the car's center to the contact point
+          const offset = contactPoint.clone().sub(car.position);
+
+          // Calculate the position of the object relative to the car's surface
+          const carForward = new THREE.Vector3(); // Direction vector pointing forward from the car
+          car.getWorldDirection(carForward);
+
+          const carRight = new THREE.Vector3(); // Direction vector pointing to the right from the car
+          car.getWorldDirection(carRight);
+          carRight
+            .crossVectors(carRight, new THREE.Vector3(0, 1, 0))
+            .normalize(); // Calculate the right vector based on Y-axis
+
+          const objectHeightOffset = box.max.y - obj.position.y; // Adjust the offset based on the object's height
+
+          // Determine the direction of attachment based on the car's forward vector and the relative position of the object
+          const attachmentDirection = new THREE.Vector3()
+            .subVectors(contactPoint, car.position)
+            .normalize();
+
+          // Calculate the appropriate surface offset based on the attachment direction
+          let surfaceOffset;
+          if (attachmentDirection.dot(carRight) > 0) {
+            // Object attached to the right side of the car
+            surfaceOffset = carRight.clone().multiplyScalar(objectHeightOffset);
+          } else {
+            // Object attached to the left side of the car
+            surfaceOffset = carRight
+              .clone()
+              .multiplyScalar(-objectHeightOffset);
+          }
+
+          const finalOffset = offset.sub(surfaceOffset);
+
+          // Set the position of the object relative to the car
+          obj.position.copy(car.position).add(finalOffset);
+
+          car.attach(obj); // Attach the collided object to the car
           checkUpdateLevel();
+        } else {
+          // If collided object is not of the current level
+          isColliding = true;
         }
       }
     }
 
+    if (isColliding) {
+      // Reduce speed when colliding with object of other level
+      velocity *= 0.9; // Adjust the reduction factor as needed
+    }
+
     camera.position.set(
-      ball.position.x + 3,
-      ball.position.y + 3,
-      ball.position.z + 3
+      car.position.x + 3,
+      car.position.y + 3,
+      car.position.z + 3
     );
-    camera.lookAt(ball.position);
+    camera.lookAt(car.position);
   }
   renderer.render(scene, camera);
 };
