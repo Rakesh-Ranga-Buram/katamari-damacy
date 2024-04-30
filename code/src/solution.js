@@ -13,6 +13,29 @@ let renderer,
   objects = [],
   level = 0;
 
+// Define the particle system parameters
+const particleCount = 100;
+const particleGeometry = new THREE.BufferGeometry();
+const positions = new Float32Array(particleCount * 3);
+
+for (let i = 0; i < particleCount; i++) {
+  positions[i * 3] = Math.random() * 2 - 1;
+  positions[i * 3 + 1] = Math.random() * 2 - 1;
+  positions[i * 3 + 2] = Math.random() * 2 - 1;
+}
+
+particleGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(positions, 3)
+);
+const particleMaterial = new THREE.PointsMaterial({
+  color: 0xff0000,
+  size: 0.2,
+});
+
+const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+particleSystem.visible = false; // Initially invisible
+
 const load = (url) =>
   new Promise((resolve, reject) => {
     const loader = new GLTFLoader();
@@ -36,6 +59,9 @@ const checkUpdateLevel = () => {
     }
   }
 };
+
+// Load sound
+const collisionSound = new Audio("./assets/clank-car-crash-collision-6206.mp3");
 
 window.init = async () => {
   renderer = new THREE.WebGLRenderer();
@@ -143,6 +169,9 @@ window.init = async () => {
     scene.add(canClone);
     objects.push(canClone);
   }
+
+  // Add the particle system to the scene
+  scene.add(particleSystem);
 };
 
 let acc = 0.0001;
@@ -250,6 +279,19 @@ window.loop = (dt, input) => {
           obj.position.copy(car.position).add(finalOffset);
 
           car.attach(obj); // Attach the collided object to the car
+
+          // Show the particle system at the collision point
+          particleSystem.position.copy(contactPoint);
+          particleSystem.visible = true;
+
+          // Play collision sound
+          collisionSound.play();
+
+          // Hide the particle system after a short delay
+          setTimeout(() => {
+            particleSystem.visible = false;
+          }, 500); // Adjust the duration as needed
+
           checkUpdateLevel();
         } else {
           // If collided object is not of the current level
